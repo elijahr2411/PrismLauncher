@@ -1,17 +1,27 @@
 #pragma once
 
-#include "InstanceCreationTask.h"
-
 #include <optional>
 
-#include "minecraft/MinecraftInstance.h"
+#include <QByteArray>
+#include <QCryptographicHash>
+#include <QQueue>
+#include <QString>
+#include <QUrl>
+#include <QVector>
 
-#include "modplatform/modrinth/ModrinthPackManifest.h"
-
-#include "net/NetJob.h"
+#include "BaseInstance.h"
+#include "InstanceCreationTask.h"
 
 class ModrinthCreationTask final : public InstanceCreationTask {
     Q_OBJECT
+    struct File {
+        QString path;
+
+        QCryptographicHash::Algorithm hashAlgorithm;
+        QByteArray hash;
+        QQueue<QUrl> downloads;
+        bool required = true;
+    };
 
    public:
     ModrinthCreationTask(QString staging_path,
@@ -34,7 +44,7 @@ class ModrinthCreationTask final : public InstanceCreationTask {
     bool createInstance() override;
 
    private:
-    bool parseManifest(const QString&, std::vector<Modrinth::File>&, bool set_internal_data = true, bool show_optional_dialog = true);
+    bool parseManifest(const QString&, std::vector<File>&, bool set_internal_data = true, bool show_optional_dialog = true);
 
    private:
     QWidget* m_parent = nullptr;
@@ -42,8 +52,8 @@ class ModrinthCreationTask final : public InstanceCreationTask {
     QString m_minecraft_version, m_fabric_version, m_quilt_version, m_forge_version, m_neoForge_version;
     QString m_managed_id, m_managed_version_id, m_managed_name;
 
-    std::vector<Modrinth::File> m_files;
-    NetJob::Ptr m_files_job;
+    std::vector<File> m_files;
+    Task::Ptr m_task;
 
     std::optional<InstancePtr> m_instance;
 

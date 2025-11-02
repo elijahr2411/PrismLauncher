@@ -14,8 +14,7 @@
 
 #include <net/NetJob.h>
 #include <functional>
-
-#include <modplatform/flame/FlamePackIndex.h>
+#include "ui/widgets/ModFilterWidget.h"
 
 namespace Flame {
 
@@ -38,10 +37,10 @@ class ListModel : public QAbstractListModel {
     void fetchMore(const QModelIndex& parent) override;
 
     void getLogo(const QString& logo, const QString& logoUrl, LogoCallback callback);
-    void searchWithTerm(const QString& term, int sort);
+    void searchWithTerm(const QString& term, int sort, std::shared_ptr<ModFilterWidget::Filter> filter, bool filterChanged);
 
-    [[nodiscard]] bool hasActiveSearchJob() const { return jobPtr && jobPtr->isRunning(); }
-    [[nodiscard]] Task::Ptr activeSearchJob() { return hasActiveSearchJob() ? jobPtr : nullptr; }
+    bool hasActiveSearchJob() const { return m_jobPtr && m_jobPtr->isRunning(); }
+    Task::Ptr activeSearchJob() { return hasActiveSearchJob() ? m_jobPtr : nullptr; }
 
    private slots:
     void performPaginatedSearch();
@@ -49,26 +48,26 @@ class ListModel : public QAbstractListModel {
     void logoFailed(QString logo);
     void logoLoaded(QString logo, QIcon out);
 
-    void searchRequestFinished();
+    void searchRequestFinished(QList<ModPlatform::IndexedPack::Ptr>&);
     void searchRequestFailed(QString reason);
-    void searchRequestForOneSucceeded(QJsonDocument&);
+    void searchRequestForOneSucceeded(ModPlatform::IndexedPack&);
 
    private:
     void requestLogo(QString file, QString url);
 
    private:
-    QList<IndexedPack> modpacks;
+    QList<ModPlatform::IndexedPack::Ptr> m_modpacks;
     QStringList m_failedLogos;
     QStringList m_loadingLogos;
     LogoMap m_logoMap;
-    QMap<QString, LogoCallback> waitingCallbacks;
+    QMap<QString, LogoCallback> m_waitingCallbacks;
 
-    QString currentSearchTerm;
-    int currentSort = 0;
-    int nextSearchOffset = 0;
-    enum SearchState { None, CanPossiblyFetchMore, ResetRequested, Finished } searchState = None;
-    Task::Ptr jobPtr;
-    std::shared_ptr<QByteArray> response = std::make_shared<QByteArray>();
+    QString m_currentSearchTerm;
+    int m_currentSort = 0;
+    std::shared_ptr<ModFilterWidget::Filter> m_filter;
+    int m_nextSearchOffset = 0;
+    enum SearchState { None, CanPossiblyFetchMore, ResetRequested, Finished } m_searchState = None;
+    Task::Ptr m_jobPtr;
 };
 
 }  // namespace Flame

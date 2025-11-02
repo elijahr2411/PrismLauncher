@@ -36,6 +36,7 @@
 
 #pragma once
 #include <java/JavaVersion.h>
+#include <minecraft/mod/DataPackFolderModel.h>
 #include <QDir>
 #include <QProcess>
 #include "BaseInstance.h"
@@ -48,7 +49,6 @@ class ResourcePackFolderModel;
 class ShaderPackFolderModel;
 class TexturePackFolderModel;
 class WorldList;
-class GameOptions;
 class LaunchStep;
 class PackProfile;
 
@@ -80,6 +80,7 @@ class MinecraftInstance : public BaseInstance {
     QString modsRoot() const override;
     QString coreModsDir() const;
     QString nilModsDir() const;
+    QString dataPacksDir();
     QString modsCacheLocation() const;
     QString libDir() const;
     QString worldDir() const;
@@ -102,9 +103,9 @@ class MinecraftInstance : public BaseInstance {
     QString getLocalLibraryPath() const;
 
     /** Returns whether the instance, with its version, has support for demo mode. */
-    [[nodiscard]] bool supportsDemo() const;
+    bool supportsDemo() const;
 
-    void updateRuntimeContext();
+    void updateRuntimeContext() override;
 
     //////  Profile management //////
     std::shared_ptr<PackProfile> getPackProfile() const;
@@ -116,11 +117,12 @@ class MinecraftInstance : public BaseInstance {
     std::shared_ptr<ResourcePackFolderModel> resourcePackList();
     std::shared_ptr<TexturePackFolderModel> texturePackList();
     std::shared_ptr<ShaderPackFolderModel> shaderPackList();
+    std::shared_ptr<DataPackFolderModel> dataPackList();
+    QList<std::shared_ptr<ResourceFolderModel>> resourceLists();
     std::shared_ptr<WorldList> worldList();
-    std::shared_ptr<GameOptions> gameOptionsModel();
 
     //////  Launch stuff //////
-    Task::Ptr createUpdateTask(Net::Mode mode) override;
+    QList<Task::Ptr> createUpdateTask() override;
     shared_qobject_ptr<LaunchTask> createLaunchTask(AuthSessionPtr account, MinecraftTarget::Ptr targetToJoin) override;
     QStringList extraArguments() override;
     QStringList verboseDescription(AuthSessionPtr session, MinecraftTarget::Ptr targetToJoin) override;
@@ -138,12 +140,7 @@ class MinecraftInstance : public BaseInstance {
     QProcessEnvironment createEnvironment() override;
     QProcessEnvironment createLaunchEnvironment() override;
 
-    /// guess log level from a line of minecraft log
-    MessageLevel::Enum guessLevel(const QString& line, MessageLevel::Enum level) override;
-
-    IPathMatcher::Ptr getLogFileMatcher() override;
-
-    QString getLogFileRoot() override;
+    QStringList getLogFileSearchPaths() override;
 
     QString getStatusbarDescription() override;
 
@@ -170,8 +167,8 @@ class MinecraftInstance : public BaseInstance {
     mutable std::shared_ptr<ResourcePackFolderModel> m_resource_pack_list;
     mutable std::shared_ptr<ShaderPackFolderModel> m_shader_pack_list;
     mutable std::shared_ptr<TexturePackFolderModel> m_texture_pack_list;
+    mutable std::shared_ptr<DataPackFolderModel> m_data_pack_list;
     mutable std::shared_ptr<WorldList> m_world_list;
-    mutable std::shared_ptr<GameOptions> m_game_options;
 };
 
 using MinecraftInstancePtr = std::shared_ptr<MinecraftInstance>;

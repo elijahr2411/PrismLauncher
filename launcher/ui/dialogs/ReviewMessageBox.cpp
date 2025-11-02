@@ -1,8 +1,6 @@
 #include "ReviewMessageBox.h"
 #include "ui_ReviewMessageBox.h"
 
-#include "Application.h"
-
 #include <QPushButton>
 
 ReviewMessageBox::ReviewMessageBox(QWidget* parent, [[maybe_unused]] QString const& title, [[maybe_unused]] QString const& icon)
@@ -20,6 +18,9 @@ ReviewMessageBox::ReviewMessageBox(QWidget* parent, [[maybe_unused]] QString con
 
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &ReviewMessageBox::accept);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &ReviewMessageBox::reject);
+
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("OK"));
 }
 
 ReviewMessageBox::~ReviewMessageBox()
@@ -38,7 +39,7 @@ void ReviewMessageBox::appendResource(ResourceInformation&& info)
     itemTop->setCheckState(0, info.enabled ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
     itemTop->setText(0, info.name);
     if (!info.enabled) {
-        itemTop->setToolTip(0, tr("Mod was disabled as it may be already instaled."));
+        itemTop->setToolTip(0, tr("Mod was disabled as it may be already installed."));
     }
 
     auto filenameItem = new QTreeWidgetItem(itemTop);
@@ -53,7 +54,7 @@ void ReviewMessageBox::appendResource(ResourceInformation&& info)
 
         itemTop->insertChildren(1, { customPathItem });
 
-        itemTop->setIcon(1, QIcon(APPLICATION->getThemedIcon("status-yellow")));
+        itemTop->setIcon(1, QIcon(QIcon::fromTheme("status-yellow")));
         itemTop->setToolTip(
             childIndx++,
             tr("This file will be downloaded to a folder location different from the default, possibly due to its loader requiring it."));

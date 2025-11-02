@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  *  Prism Launcher - Minecraft Launcher
- *  Copyright (c) 2023 Trial97 <alexandru.tripon97@gmail.com>
+ *  Copyright (c) 2023-2024 Trial97 <alexandru.tripon97@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,22 +24,23 @@
 struct JavaInstall : public BaseVersion {
     JavaInstall() {}
     JavaInstall(QString id, QString arch, QString path) : id(id), arch(arch), path(path) {}
-    virtual QString descriptor() override { return id.toString(); }
+    virtual QString descriptor() const override { return id.toString(); }
 
-    virtual QString name() override { return id.toString(); }
+    virtual QString name() const override { return id.toString(); }
 
     virtual QString typeString() const override { return arch; }
 
-    virtual bool operator<(BaseVersion& a) override;
-    virtual bool operator>(BaseVersion& a) override;
-    bool operator<(const JavaInstall& rhs);
-    bool operator==(const JavaInstall& rhs);
-    bool operator>(const JavaInstall& rhs);
+    virtual bool operator<(BaseVersion& a) const override;
+    virtual bool operator>(BaseVersion& a) const override;
+    bool operator<(const JavaInstall& rhs) const;
+    bool operator==(const JavaInstall& rhs) const;
+    bool operator>(const JavaInstall& rhs) const;
 
     JavaVersion id;
     QString arch;
     QString path;
     bool recommended = false;
+    bool is_64bit = false;
 };
 
 using JavaInstallPtr = std::shared_ptr<JavaInstall>;

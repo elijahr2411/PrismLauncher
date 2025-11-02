@@ -39,11 +39,10 @@
 #include <QTreeView>
 #include <QWidget>
 
-#include <Application.h>
 #include "QObjectPtr.h"
 #include "modplatform/legacy_ftb/PackFetchTask.h"
 #include "modplatform/legacy_ftb/PackHelpers.h"
-#include "ui/pages/BasePage.h"
+#include "ui/pages/modplatform/ModpackProviderBasePage.h"
 
 class NewInstanceDialog;
 
@@ -57,19 +56,24 @@ class ListModel;
 class FilterModel;
 class PrivatePackManager;
 
-class Page : public QWidget, public BasePage {
+class Page : public QWidget, public ModpackProviderBasePage {
     Q_OBJECT
 
    public:
     explicit Page(NewInstanceDialog* dialog, QWidget* parent = 0);
     virtual ~Page();
     QString displayName() const override { return "FTB Legacy"; }
-    QIcon icon() const override { return APPLICATION->getThemedIcon("ftb_logo"); }
+    QIcon icon() const override { return QIcon::fromTheme("ftb_logo"); }
     QString id() const override { return "legacy_ftb"; }
     QString helpPage() const override { return "FTB-legacy"; }
     bool shouldDisplay() const override;
     void openedImpl() override;
     void retranslate() override;
+
+    /** Programatically set the term in the search bar. */
+    virtual void setSearchTerm(QString) override;
+    /** Get the current term in the search bar. */
+    virtual QString getSerachTerm() const override;
 
    private:
     void suggestCurrent();
@@ -80,7 +84,7 @@ class Page : public QWidget, public BasePage {
     void ftbPackDataDownloadFailed(QString reason);
     void ftbPackDataDownloadAborted();
 
-    void ftbPrivatePackDataDownloadSuccessfully(Modpack pack);
+    void ftbPrivatePackDataDownloadSuccessfully(const Modpack& pack);
     void ftbPrivatePackDataDownloadFailed(QString reason, QString packCode);
 
     void onSortingSelectionChanged(QString data);

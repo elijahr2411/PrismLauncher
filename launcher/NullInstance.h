@@ -53,12 +53,11 @@ class NullInstance : public BaseInstance {
     QSet<QString> traits() const override { return {}; };
     QString instanceConfigFolder() const override { return instanceRoot(); };
     shared_qobject_ptr<LaunchTask> createLaunchTask(AuthSessionPtr, MinecraftTarget::Ptr) override { return nullptr; }
-    shared_qobject_ptr<Task> createUpdateTask([[maybe_unused]] Net::Mode mode) override { return nullptr; }
+    QList<Task::Ptr> createUpdateTask() override { return {}; }
     QProcessEnvironment createEnvironment() override { return QProcessEnvironment(); }
     QProcessEnvironment createLaunchEnvironment() override { return QProcessEnvironment(); }
     QMap<QString, QString> getVariables() override { return QMap<QString, QString>(); }
-    IPathMatcher::Ptr getLogFileMatcher() override { return nullptr; }
-    QString getLogFileRoot() override { return instanceRoot(); }
+    QStringList getLogFileSearchPaths() override { return {}; }
     QString typeName() const override { return "Null"; }
     bool canExport() const override { return false; }
     bool canEdit() const override { return false; }
@@ -71,7 +70,7 @@ class NullInstance : public BaseInstance {
         return out;
     }
     QString modsRoot() const override { return QString(); }
-    void updateRuntimeContext()
+    void updateRuntimeContext() override
     {
         // NOOP
     }

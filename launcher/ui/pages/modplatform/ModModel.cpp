@@ -7,13 +7,16 @@
 #include "minecraft/MinecraftInstance.h"
 #include "minecraft/PackProfile.h"
 #include "minecraft/mod/ModFolderModel.h"
+#include "modplatform/ModIndex.h"
 
 #include <QMessageBox>
 #include <algorithm>
 
 namespace ResourceDownload {
 
-ModModel::ModModel(BaseInstance& base_inst, ResourceAPI* api) : ResourceModel(api), m_base_instance(base_inst) {}
+ModModel::ModModel(BaseInstance& base_inst, ResourceAPI* api, QString debugName, QString metaEntryBase)
+    : ResourceModel(api), m_base_instance(base_inst), m_debugName(debugName + " (Model)"), m_metaEntryBase(metaEntryBase)
+{}
 
 /******** Make data requests ********/
 
@@ -39,10 +42,12 @@ ResourceAPI::SearchArgs ModModel::createSearchArguments()
 
     auto sort = getCurrentSortingMethodByIndex();
 
-    return { ModPlatform::ResourceType::MOD, m_next_search_offset, m_search_term, sort, loaders, versions, side, categories };
+    return {
+        ModPlatform::ResourceType::Mod, m_next_search_offset, m_search_term, sort, loaders, versions, side, categories, m_filter->openSource
+    };
 }
 
-ResourceAPI::VersionSearchArgs ModModel::createVersionsArguments(QModelIndex& entry)
+ResourceAPI::VersionSearchArgs ModModel::createVersionsArguments(const QModelIndex& entry)
 {
     auto& pack = *m_packs[entry.row()];
     auto profile = static_cast<MinecraftInstance const&>(m_base_instance).getPackProfile();
@@ -57,10 +62,10 @@ ResourceAPI::VersionSearchArgs ModModel::createVersionsArguments(QModelIndex& en
     if (m_filter->loaders)
         loaders = m_filter->loaders;
 
-    return { pack, versions, loaders };
+    return { pack, versions, loaders, ModPlatform::ResourceType::Mod };
 }
 
-ResourceAPI::ProjectInfoArgs ModModel::createInfoArguments(QModelIndex& entry)
+ResourceAPI::ProjectInfoArgs ModModel::createInfoArguments(const QModelIndex& entry)
 {
     auto& pack = *m_packs[entry.row()];
     return { pack };
@@ -99,21 +104,10 @@ QVariant ModModel::getInstalledPackVersion(ModPlatform::IndexedPack::Ptr pack) c
     return {};
 }
 
-bool checkSide(QString filter, QString value)
+bool checkSide(ModPlatform::Side filter, ModPlatform::Side value)
 {
-    return filter.isEmpty() || value.isEmpty() || filter == "both" || value == "both" || filter == value;
-}
-
-bool checkMcVersions(std::list<Version> filter, QStringList value)
-{
-    bool valid = false;
-    for (auto mcVersion : filter) {
-        if (value.contains(mcVersion.toString())) {
-            valid = true;
-            break;
-        }
-    }
-    return filter.empty() || valid;
+    return filter == ModPlatform::Side::NoSide || value == ModPlatform::Side::NoSide || filter == ModPlatform::Side::UniversalSide ||
+           value == ModPlatform::Side::UniversalSide || filter == value;
 }
 
 bool ModModel::checkFilters(ModPlatform::IndexedPack::Ptr pack)
@@ -135,7 +129,7 @@ bool ModModel::checkVersionFilters(const ModPlatform::IndexedVersion& v)
             checkSide(m_filter->side, v.side) &&                                    // side
             (m_filter->releases.empty() ||                                          // releases
              std::find(m_filter->releases.cbegin(), m_filter->releases.cend(), v.version_type) != m_filter->releases.cend()) &&
-            checkMcVersions(m_filter->versions, v.mcVersion));  // mcVersions
+            m_filter->checkMcVersions(v.mcVersion));  // mcVersions
 }
 
 }  // namespace ResourceDownload

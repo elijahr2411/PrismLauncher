@@ -2,7 +2,7 @@
 /*
  *  Prism Launcher - Minecraft Launcher
  *  Copyright (C) 2024 Tayou <git@tayou.org>
- *  Copyright (C) 2023 TheKodeToad <TheKodeToad@proton.me>
+ *  Copyright (C) 2024 TheKodeToad <TheKodeToad@proton.me>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,10 +18,12 @@
  */
 #pragma once
 
+#include <QDir>
+#include <QLoggingCategory>
 #include <QString>
+#include <memory>
 
 #include "IconTheme.h"
-#include "ui/MainWindow.h"
 #include "ui/themes/CatPack.h"
 #include "ui/themes/ITheme.h"
 
@@ -37,6 +39,7 @@ inline auto themeWarningLog()
 class ThemeManager {
    public:
     ThemeManager();
+    ~ThemeManager();
 
     QList<IconTheme*> getValidIconThemes();
     QList<ITheme*> getValidApplicationThemes();
@@ -55,6 +58,8 @@ class ThemeManager {
     QString getCatPack(QString catName = "");
     QList<CatPack*> getValidCatPacks();
 
+    const LogColors& getLogColors() { return m_logColors; }
+
     void refresh();
 
    private:
@@ -63,8 +68,10 @@ class ThemeManager {
     QDir m_iconThemeFolder{ "iconthemes" };
     QDir m_applicationThemeFolder{ "themes" };
     QDir m_catPacksFolder{ "catpacks" };
-    std::map<QString, std::unique_ptr<CatPack>> m_cat_packs;
-    QString currentlySelectedSystemTheme;
+    std::map<QString, std::unique_ptr<CatPack>> m_catPacks;
+    QPalette m_defaultPalette;
+    QString m_defaultStyle;
+    LogColors m_logColors;
 
     void initializeThemes();
     void initializeCatPacks();
@@ -74,6 +81,17 @@ class ThemeManager {
     QString addCatPack(std::unique_ptr<CatPack> catPack);
     void initializeIcons();
     void initializeWidgets();
+
+    // On non-Mac systems, this is a no-op.
+    void setTitlebarColorOnMac(WId windowId, QColor color);
+    // This also will set the titlebar color of newly opened windows after this method is called.
+    // On non-Mac systems, this is a no-op.
+    void setTitlebarColorOfAllWindowsOnMac(QColor color);
+    // On non-Mac systems, this is a no-op.
+    void stopSettingNewWindowColorsOnMac();
+#ifdef Q_OS_MACOS
+    NSObject* m_windowTitlebarObserver = nullptr;
+#endif
 
     const QStringList builtinIcons{ "pe_colored", "pe_light", "pe_dark", "pe_blue",    "breeze_light", "breeze_dark",
                                     "OSX",        "iOS",      "flat",    "flat_white", "multimc" };
